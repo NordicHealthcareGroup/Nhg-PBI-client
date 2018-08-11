@@ -1,0 +1,72 @@
+﻿html{
+    min-height:100%;/* make sure it is at least as tall as the viewport */
+    position:relative;
+}
+body {
+  margin:0; 
+  padding:0; 
+  height:100%; 
+  font-family: 'Segoe UI Web Light', 'Segoe UI Light', 'Segoe WP Light', 'Segoe UI', 'Segoe WP', 'Tahoma, Arial, sans-serif';
+ }
+
+
+#reportContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  overflow: auto;
+  background: none; /* Just to visualize the extent 
+
+    /*height: 100%;
+    width: 100%;
+    max-width: 3000px;
+    max-height:2000px;*/
+}
+
+#dashboardContainer {
+    height: 932px;
+    width: 100%;
+    max-width: 1320px;
+}
+
+#dashboardContainer iframe{
+    border: none;
+}
+
+#buttonsWrapper {
+    width: 100%;
+    text-align: center;
+    padding-top: 50px;
+}
+
+a:hover, a:visited, a:link, a:active {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#buttonsWrapper a {
+    background-color: rgb(36, 169, 225);
+    border: none;
+    color: white;
+    padding: 5px 30px;
+    margin: 5px;
+    width: 200px;
+    height: 30px;
+    display: inline-block;
+    text-align: center;
+}
+
+#buttonsWrapper a:hover {
+   font-size: 120%;
+}
+
+#tileContainer {
+    width: 400px;
+    height: 350px;
+}
+
+.infoBox {
+    margin-top: 30px;
+}
