@@ -9,6 +9,12 @@ using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
+using System.Web;
+using Microsoft.Owin.Security;
+using Microsoft.Owin.Security.Cookies;
+using Microsoft.Owin.Security.OpenIdConnect;
+using System.Collections.Specialized;
+using Newtonsoft.Json;
 
 namespace Nhg.Controllers
 {
@@ -19,17 +25,162 @@ namespace Nhg.Controllers
         private static readonly string AuthorityUrl = ConfigurationManager.AppSettings["authorityUrl"];
         private static readonly string ResourceUrl = ConfigurationManager.AppSettings["resourceUrl"];
         private static readonly string ClientId = ConfigurationManager.AppSettings["clientId"];
+        private static readonly string ClientSecret = ConfigurationManager.AppSettings["clientSecret"];
         private static readonly string ApiUrl = ConfigurationManager.AppSettings["apiUrl"];
         private static readonly string GroupId = ConfigurationManager.AppSettings["groupId"];
         private static readonly string ReportId = ConfigurationManager.AppSettings["reportId"];
-
-        public ActionResult Index()
+        private static readonly string RedirectUrl = ConfigurationManager.AppSettings["redirectUrl"];
+        private static readonly string BaseUri = ConfigurationManager.AppSettings["powerBIDataset"];
+        public class PBIReports
         {
+            public PBIReport[] value { get; set; }
+        }
+        public class PBIReport
+        {
+            public string id { get; set; }
+            public string name { get; set; }
+            public string webUrl { get; set; }
+            public string embedUrl { get; set; }
+        }
+
+
+        // Sends an OpenIDConnect Sign-In Request.  
+        public void SignIn()
+        {
+            if (!Request.IsAuthenticated)
+            {
+
+                HttpContext.GetOwinContext()
+                    .Authentication.Challenge(new AuthenticationProperties { RedirectUri = "/" },
+                        OpenIdConnectAuthenticationDefaults.AuthenticationType);
+            }
+        }
+
+
+        //  Signs the user out and clears the cache of access tokens.  
+        public void SignOut()
+        {
+
+            HttpContext.GetOwinContext().Authentication.SignOut(
+                OpenIdConnectAuthenticationDefaults.AuthenticationType, CookieAuthenticationDefaults.AuthenticationType);
+        }
+
+
+        public async Task<ActionResult> Index()
+        {
+
+            if (Request.Cookies.AllKeys.Contains("token"))
+            {
+                // If we have a token go ahead and use it
+                ViewData["token"] = Request.Cookies["token"];
+            }
+            else if (Request.QueryString.AllKeys.Contains("code"))
+            {
+                // If we have a code, we need to exchange that for a token
+                string strToken = await GetAccessToken(Request.QueryString["code"], ClientId, ClientSecret, RedirectUrl);
+                Response.Cookies.Add(new HttpCookie("token", strToken));
+                ViewData["token"] = strToken;
+            }
+            else
+            {
+                // No token or code so have the user login and get a code
+                GetAuthorizationCode();
+            }
+
             return View();
         }
 
+        public void GetAuthorizationCode()
+        {
+            var paramList = new NameValueCollection();
+            paramList.Add("response_type", "code");
+            paramList.Add("client_id", ClientId);
+            paramList.Add("resource", ResourceUrl);
+            paramList.Add("redirect_uri", RedirectUrl);
+
+            // string strUrl = QueryHelpers.AddQueryString(AuthorityUrl, paramList);
+            var queryString = HttpUtility.ParseQueryString(string.Empty);
+            queryString.Add(@paramList);
+            string strUrl = String.Format(AuthorityUrl + "?{0}", queryString);
+            Response.Redirect(strUrl);
+        }
+
+        public async Task<string> GetAccessToken(string authorizationCode, string clientID, string clientSecret, string redirectUri)
+        {
+            TokenCache TC = new TokenCache();
+
+            AuthenticationContext AC = new AuthenticationContext(AuthorityUrl, TC);
+            ClientCredential cc = new ClientCredential(clientID, clientSecret);
+
+            AuthenticationResult result = await AC.AcquireTokenByAuthorizationCodeAsync(authorizationCode, new Uri(redirectUri), cc);
+            return result.AccessToken;
+        }
+
+
+
+        //public ActionResult Index()
+        //{
+        //    return View();
+        //}
+
         public async Task<ActionResult> Run(string reportid, string groupid, string username, string roles)
         {
+            if (Request.Cookies.AllKeys.Contains("token"))
+            {
+                // If we have a token go ahead and use it
+                ViewData["token"] = Request.Cookies["token"];
+            }
+            else if (Request.QueryString.AllKeys.Contains("code"))
+            {
+                // If we have a code, we need to exchange that for a token
+                string strToken = await GetAccessToken(Request.QueryString["code"], ClientId, ClientSecret, RedirectUrl);
+
+                Response.Cookies.Add(new HttpCookie("token", strToken));
+                ViewData["token"] = strToken;
+
+            }
+            else
+            {
+                // No token or code so have the user login and get a code
+                GetAuthorizationCode();
+            }
+            var report = GetReport(reportid, groupid);
+            var result = new ReportModel();
+            if (report == null)
+                result.ErrorMessage = "Report not found";
+            else
+            {
+                result.Token = (string)ViewData["token"];
+                result.EmbedUrl = report.webUrl;
+                result.Id = report.id;
+                result.GroupId = groupid;
+            }
+            return View(result);
+        }
+
+
+        public async Task<ActionResult> OldRun(string reportid, string groupid, string username, string roles)
+        {
+            if (Request.Cookies.AllKeys.Contains("token"))
+            {
+                // If we have a token go ahead and use it
+                ViewData["token"] = Request.Cookies["token"];
+            }
+            else if (Request.QueryString.AllKeys.Contains("code"))
+            {
+                // If we have a code, we need to exchange that for a token
+                string strToken = await GetAccessToken(Request.QueryString["code"], ClientId, ClientSecret, RedirectUrl);
+
+                Response.Cookies.Add(new HttpCookie("token", strToken));
+                //Mihin mennään? 
+                //Response.Redirect("/Home/Run");
+            }
+            else
+            {
+                // No token or code so have the user login and get a code
+                GetAuthorizationCode();
+            }
+
             var result = new EmbedConfig();
             try
             {
@@ -41,12 +192,14 @@ namespace Nhg.Controllers
                     return View(result);
                 }
 
+
                 // Create a user password cradentials.
                 var credential = new UserPasswordCredential(Username, Password);
 
                 // Authenticate using created credentials
                 var authenticationContext = new AuthenticationContext(AuthorityUrl);
                 var authenticationResult = await authenticationContext.AcquireTokenAsync(ResourceUrl, ClientId, credential);
+                /////
 
                 if (authenticationResult == null)
                 {
@@ -372,7 +525,7 @@ namespace Nhg.Controllers
                     EmbedToken = tokenResponse,
                     EmbedUrl = tile.EmbedUrl,
                     Id = tile.Id,
-                    dashboardId = dashboard.Id 
+                    dashboardId = dashboard.Id
                 };
 
                 return View(embedConfig);
@@ -421,8 +574,57 @@ namespace Nhg.Controllers
             {
                 return "Password is empty. Please fill password of Power BI username in web.config";
             }
-
             return null;
         }
+        protected PBIReport GetReport(string reportid, string groupid)
+        {
+            //Configure Reports request
+            System.Net.WebRequest request = null;
+            if (groupid != null)
+            {
+                request = System.Net.WebRequest.Create(
+                    String.Format("{0}/groups/{1}/Reports",
+                    BaseUri, groupid)) as System.Net.HttpWebRequest;
+            }
+            else
+            {
+                request = System.Net.WebRequest.Create(
+                    String.Format("{0}/Reports",
+                    BaseUri)) as System.Net.HttpWebRequest;
+            }
+
+            request.Method = "GET";
+            request.ContentLength = 0;
+            request.Headers.Add("Authorization", String.Format("Bearer {0}", ViewData["token"]));
+
+            //Get Reports response from request.GetResponse()
+            using (var response = request.GetResponse() as System.Net.HttpWebResponse)
+            {
+                //Get reader from response stream
+                using (var reader = new System.IO.StreamReader(response.GetResponseStream()))
+                {
+                    //Deserialize JSON string
+                    PBIReports Reports = JsonConvert.DeserializeObject<PBIReports>(reader.ReadToEnd());
+
+                    //Sample assumes at least one Report.
+                    //You could write an app that lists all Reports
+                    if (Reports.value.Length > 0)
+                    {
+                        if (reportid == null)
+                            return Reports.value[0];
+                        else
+                            foreach (var report in Reports.value)
+                            {
+                                if (report.id == reportid)
+                                {
+                                    return report;
+                                }
+                            }
+                    }
+                    return null;
+                }
+            }
+        }
     }
+
 }
