@@ -151,7 +151,8 @@ namespace Nhg.Controllers
             else
             {
                 result.Token = (string)ViewData["token"];
-                result.EmbedUrl = report.webUrl;
+                //result.EmbedUrl = report.webUrl;
+                result.EmbedUrl = report.embedUrl;
                 result.Id = report.id;
                 result.GroupId = groupid;
             }
