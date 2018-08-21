@@ -129,6 +129,9 @@ namespace Nhg.Controllers
             {
                 // If we have a token go ahead and use it
                 ViewData["token"] = Request.Cookies["token"];
+                ViewData["reportid"] = Request.Cookies["reportid"].Value;
+                ViewData["groupid"] = Request.Cookies["groupid"].Value;
+
             }
             else if (Request.QueryString.AllKeys.Contains("code"))
             {
@@ -137,14 +140,19 @@ namespace Nhg.Controllers
 
                 Response.Cookies.Add(new HttpCookie("token", strToken));
                 ViewData["token"] = strToken;
-
+                ViewData["reportid"] = Request.Cookies["reportid"].Value;
+                ViewData["groupid"] = Request.Cookies["groupid"].Value;
             }
             else
             {
                 // No token or code so have the user login and get a code
+                Response.Cookies.Add(new HttpCookie("reportid", reportid));
+                Response.Cookies.Add(new HttpCookie("groupid", groupid));
+                ViewData["reportid"] = reportid;
+                ViewData["groupid"] = groupid;
                 GetAuthorizationCode();
             }
-            var report = GetReport(reportid, groupid);
+            var report = GetReport((string)ViewData["reportid"], (string)ViewData["groupid"]);
             var result = new ReportModel();
             if (report == null)
                 result.ErrorMessage = "Report not found";
@@ -159,133 +167,6 @@ namespace Nhg.Controllers
             return View(result);
         }
 
-
-        public async Task<ActionResult> OldRun(string reportid, string groupid, string username, string roles)
-        {
-            if (Request.Cookies.AllKeys.Contains("token"))
-            {
-                // If we have a token go ahead and use it
-                ViewData["token"] = Request.Cookies["token"];
-            }
-            else if (Request.QueryString.AllKeys.Contains("code"))
-            {
-                // If we have a code, we need to exchange that for a token
-                string strToken = await GetAccessToken(Request.QueryString["code"], ClientId, ClientSecret, RedirectUrl);
-
-                Response.Cookies.Add(new HttpCookie("token", strToken));
-                //Mihin mennään? 
-                //Response.Redirect("/Home/Run");
-            }
-            else
-            {
-                // No token or code so have the user login and get a code
-                GetAuthorizationCode();
-            }
-
-            var result = new EmbedConfig();
-            try
-            {
-                result = new EmbedConfig { Username = username, Roles = roles };
-                var error = GetWebConfigErrors();
-                if (error != null)
-                {
-                    result.ErrorMessage = error;
-                    return View(result);
-                }
-
-
-                // Create a user password cradentials.
-                var credential = new UserPasswordCredential(Username, Password);
-
-                // Authenticate using created credentials
-                var authenticationContext = new AuthenticationContext(AuthorityUrl);
-                var authenticationResult = await authenticationContext.AcquireTokenAsync(ResourceUrl, ClientId, credential);
-                /////
-
-                if (authenticationResult == null)
-                {
-                    result.ErrorMessage = "Authentication Failed.";
-                    return View(result);
-                }
-
-                var tokenCredentials = new TokenCredentials(authenticationResult.AccessToken, "Bearer");
-
-                // Create a Power BI Client object. It will be used to call Power BI APIs.
-                using (var client = new PowerBIClient(new Uri(ApiUrl), tokenCredentials))
-                {
-                    // Get a list of reports.
-                    var groupId = (groupid ?? GroupId);
-                    var reports = await client.Reports.GetReportsInGroupAsync(groupId);
-
-                    Report report;
-                    var reportId = (reportid ?? ReportId);
-                    if (string.IsNullOrEmpty(reportId))
-                    {
-                        //// Get the first report in the group.
-                        //report = reports.Value.FirstOrDefault();
-                        report = null;
-                    }
-                    else
-                    {
-                        report = reports.Value.FirstOrDefault(r => r.Id == reportId);
-                    }
-
-                    if (report == null)
-                    {
-                        result.ErrorMessage = "RaporttiId puuttuu";
-                        return View(result);
-                    }
-
-                    var datasets = await client.Datasets.GetDatasetByIdInGroupAsync(groupId, report.DatasetId);
-                    result.IsEffectiveIdentityRequired = datasets.IsEffectiveIdentityRequired;
-                    result.IsEffectiveIdentityRolesRequired = datasets.IsEffectiveIdentityRolesRequired;
-                    GenerateTokenRequest generateTokenRequestParameters;
-                    // This is how you create embed token with effective identities
-                    if (!string.IsNullOrEmpty(username))
-                    {
-                        var rls = new EffectiveIdentity(username, new List<string> { report.DatasetId });
-                        if (!string.IsNullOrWhiteSpace(roles))
-                        {
-                            var rolesList = new List<string>();
-                            rolesList.AddRange(roles.Split(','));
-                            rls.Roles = rolesList;
-                        }
-                        // Generate Embed Token with effective identities.
-                        generateTokenRequestParameters = new GenerateTokenRequest(accessLevel: "view", identities: new List<EffectiveIdentity> { rls });
-                    }
-                    else
-                    {
-                        // Generate Embed Token for reports without effective identities.
-                        generateTokenRequestParameters = new GenerateTokenRequest(accessLevel: "view");
-                    }
-
-                    var tokenResponse = await client.Reports.GenerateTokenInGroupAsync(groupId, report.Id, generateTokenRequestParameters);
-
-                    if (tokenResponse == null)
-                    {
-                        result.ErrorMessage = "Failed to generate embed token.";
-                        return View(result);
-                    }
-
-                    // Generate Embed Configuration.
-                    result.EmbedToken = tokenResponse;
-                    result.EmbedUrl = report.EmbedUrl;
-                    result.Id = report.Id;
-
-                    return View(result);
-                }
-            }
-            catch (HttpOperationException exc)
-            {
-                result.ErrorMessage = string.Format("Status: {0} ({1})\r\nResponse: {2}\r\nRequestId: {3}", exc.Response.StatusCode, (int)exc.Response.StatusCode, exc.Response.Content, exc.Response.Headers["RequestId"].FirstOrDefault());
-            }
-            catch (Exception exc)
-            {
-                result.ErrorMessage = exc.ToString();
-            }
-
-            return View(result);
-        }
 
         public async Task<ActionResult> EmbedReport(string username, string roles)
         {
@@ -584,7 +465,7 @@ namespace Nhg.Controllers
             if (groupid != null)
             {
                 request = System.Net.WebRequest.Create(
-                    String.Format("{0}/groups/{1}/Reports",
+                    String.Format("{0}/Groups/{1}/Reports",
                     BaseUri, groupid)) as System.Net.HttpWebRequest;
             }
             else
