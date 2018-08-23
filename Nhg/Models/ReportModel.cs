@@ -13,6 +13,8 @@ namespace Nhg.Models
 
         public string EmbedUrl { get; set; }
 
+        public string WebUrl { get; set; }
+
         public string Token { get; set; }
 
 
