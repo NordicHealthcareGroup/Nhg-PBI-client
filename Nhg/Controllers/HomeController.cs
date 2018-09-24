@@ -83,10 +83,10 @@ namespace Nhg.Controllers
 
         public async Task<ActionResult> Run(string reportid, string groupid, string username, string roles)
         {
-            if (Session["token"] != null)
+            if (Request.Cookies["token"] != null)
                 {
                 // If we have a token go ahead and use it
-                ViewData["token"] = Session["token"];
+                ViewData["token"] = Request.Cookies["token"].Value;
                 string state = Request.QueryString["state"];
                 ReportId = state.Split('/')[0];
                 GroupId = state.Split('/')[1];
@@ -96,7 +96,11 @@ namespace Nhg.Controllers
             {
                 // If we have a code, we need to exchange that for a token
                 string strToken = await GetAccessToken(Request.QueryString["code"], ClientId, ClientSecret, RedirectUrl);
-                Session["token"] = strToken;                //
+                HttpCookie tokenCookie = new HttpCookie("token");
+                tokenCookie.Value = strToken;
+                tokenCookie.Expires = DateTime.Now.AddSeconds(10);
+                Response.Cookies.Add(tokenCookie);
+
                 ViewData["token"] = strToken;
                 string state = Request.QueryString["state"];
                 ReportId = state.Split('/')[0];
