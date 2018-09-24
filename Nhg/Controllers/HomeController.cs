@@ -27,10 +27,12 @@ namespace Nhg.Controllers
         private static readonly string ClientId = ConfigurationManager.AppSettings["clientId"];
         private static readonly string ClientSecret = ConfigurationManager.AppSettings["clientSecret"];
         private static readonly string ApiUrl = ConfigurationManager.AppSettings["apiUrl"];
-        private static readonly string GroupId = ConfigurationManager.AppSettings["groupId"];
-        private static readonly string ReportId = ConfigurationManager.AppSettings["reportId"];
         private static readonly string RedirectUrl = ConfigurationManager.AppSettings["redirectUrl"];
         private static readonly string BaseUri = ConfigurationManager.AppSettings["powerBIDataset"];
+
+        private string GroupId = ConfigurationManager.AppSettings["groupId"];
+        private string ReportId = ConfigurationManager.AppSettings["reportId"];
+
         public class PBIReports
         {
             //public PBIReport[] value { get; set; }
@@ -81,51 +83,51 @@ namespace Nhg.Controllers
 
         public async Task<ActionResult> Run(string reportid, string groupid, string username, string roles)
         {
-            if (Request.Cookies.AllKeys.Contains("token"))
-            {
+            if (Session["token"] != null)
+                {
                 // If we have a token go ahead and use it
-                ViewData["token"] = Request.Cookies["token"].Value;
-                ViewData["reportid"] = Request.Cookies["reportid"].Value;
-                ViewData["groupid"] = Request.Cookies["groupid"].Value;
+                ViewData["token"] = Session["token"];
+                string state = Request.QueryString["state"];
+                ReportId = state.Split('/')[0];
+                GroupId = state.Split('/')[1];
 
             }
             else if (Request.QueryString.AllKeys.Contains("code"))
             {
                 // If we have a code, we need to exchange that for a token
                 string strToken = await GetAccessToken(Request.QueryString["code"], ClientId, ClientSecret, RedirectUrl);
-                HttpCookie tokencookie = new HttpCookie("token", strToken);
-                tokencookie.Expires = DateTime.Now.AddMinutes(1);
-                Response.Cookies.Add(tokencookie);
-                //
+                Session["token"] = strToken;                //
                 ViewData["token"] = strToken;
-                ViewData["reportid"] = Request.Cookies["reportid"].Value;
-                ViewData["groupid"] = Request.Cookies["groupid"].Value;
+                string state = Request.QueryString["state"];
+                ReportId = state.Split('/')[0];
+                GroupId = state.Split('/')[1];
             }
             else
             {
                 // No token or code so have the user login and get a code
-                HttpCookie reportcookie = new HttpCookie("reportid", reportid);
-                reportcookie.Expires = DateTime.Now.AddMinutes(1);
-                Response.Cookies.Add(reportcookie);
-                HttpCookie groupcookie = new HttpCookie("groupid", groupid);
-                groupcookie.Expires = DateTime.Now.AddMinutes(1);
-                Response.Cookies.Add(groupcookie);
-                ViewData["reportid"] = reportid;
-                ViewData["groupid"] = groupid;
+                ReportId = reportid;
+                GroupId = groupid;
                 GetAuthorizationCode();
             }
 
-            var report = GetReport((string)ViewData["reportid"], (string)ViewData["groupid"]);
+            var report = GetReport(ReportId, GroupId);
             var result = new ReportModel();
             if (report == null)
                 result.ErrorMessage = "Report not found";
             else
             {
-                result.Token = (string)ViewData["token"];
-                //result.EmbedUrl = report.webUrl;
-                result.EmbedUrl = report.EmbedUrl;
-                result.Id = report.Id;
-                result.GroupId = groupid;
+                if (report.ErrorMessage != null)
+                {
+                    result.ErrorMessage = report.ErrorMessage;
+                }
+                else
+                {
+                    result.Token = (string)ViewData["token"];
+                    //result.EmbedUrl = report.webUrl;
+                    result.EmbedUrl = report.EmbedUrl;
+                    result.Id = report.Id;
+                    result.GroupId = groupid;
+                }
             }
             return View(result);
         }
@@ -183,6 +185,8 @@ namespace Nhg.Controllers
             paramList.Add("client_id", ClientId);
             paramList.Add("resource", ResourceUrl);
             paramList.Add("redirect_uri", RedirectUrl);
+            paramList.Add("state", ReportId + "/" + GroupId);
+
 
             // string strUrl = QueryHelpers.AddQueryString(AuthorityUrl, paramList);
             var queryString = HttpUtility.ParseQueryString(string.Empty);
@@ -205,9 +209,7 @@ namespace Nhg.Controllers
                 }
                 else
                 {
-                    request = System.Net.WebRequest.Create(
-                        String.Format("{0}/Reports",
-                        BaseUri)) as System.Net.HttpWebRequest;
+                    return null;
                 }
 
                 request.Method = "GET";
@@ -228,7 +230,7 @@ namespace Nhg.Controllers
                         if (Reports.value.Length > 0)
                         {
                             if (reportid == null)
-                                return Reports.value[0];
+                                return null;
                             else
                                 foreach (var report in Reports.value)
                                 {
@@ -254,7 +256,7 @@ namespace Nhg.Controllers
                 report.ErrorMessage = exc.ToString();
                 return report;
             }
-           
+
         }
     }
 
