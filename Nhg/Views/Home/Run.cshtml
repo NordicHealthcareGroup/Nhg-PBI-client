@@ -5,9 +5,15 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-
+@*https://nhgbi.azurewebsites.net/home/run?reportid=ac50d4a0-de07-4dc1-a1dd-6ec77da9f350&groupid=656181fb-e7d5-47d8-aa1b-9729c47f177e*@
 <script src="https://npmcdn.com/es6-promise@3.2.1"></script>
 <script src="~/scripts/powerbi.js"></script>
+<script>
+    if ("@Model.Id" != 'ac50d4a0-de07-4dc1-a1dd-6ec77da9f350')
+        document.title = 'NHG Raportointi';
+    else
+        document.title = "NHG Market Insight";
+    </script>
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div id="errorWrapper">
@@ -23,6 +29,7 @@
 }
 <div id="reportContainer"></div>
 <script>
+
     // Read embed application token from Model
     var accessToken = "@Model.EmbedToken.Token";
 

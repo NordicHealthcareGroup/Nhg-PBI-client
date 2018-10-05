@@ -215,11 +215,6 @@
     </Content>
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
-    <Content Include="Views\Home\EmbedDashboard.cshtml" />
-    <Content Include="Views\Home\EmbedReport.cshtml" />
-    <Content Include="Views\Home\EmbedTile.cshtml" />
-    <Content Include="Views\Home\Index.cshtml" />
-    <Content Include="Views\Home\LiveDemoLink.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
   </ItemGroup>
@@ -238,6 +233,7 @@
     <None Include="Properties\PublishProfiles\kmbi - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\nhgbi - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\nhgbi-in - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\nhgprivate - Web Deploy.pubxml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
