@@ -234,6 +234,7 @@
     <None Include="Properties\PublishProfiles\nhgbi - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\nhgbi-in - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\nhgprivate - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\syopa - Web Deploy.pubxml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
