@@ -249,8 +249,18 @@
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
+    <Content Include="scripts\browser.js" />
+    <Content Include="scripts\functions.js" />
+    <Content Include="scripts\html.js" />
+    <Content Include="scripts\image.js" />
+    <Content Include="scripts\init.js" />
+    <Content Include="scripts\json.js" />
+    <Content Include="scripts\modal.js" />
+    <Content Include="scripts\pdf.js" />
     <Content Include="scripts\powerbi.js" />
     <Content Include="scripts\powerbi.min.js" />
+    <Content Include="scripts\print.js" />
+    <Content Include="scripts\raw-html.js" />
     <Content Include="ViewSwitcher.ascx" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>

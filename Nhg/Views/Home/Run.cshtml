@@ -7,6 +7,8 @@
 
 <script src="https://npmcdn.com/es6-promise@3.2.1"></script>
 <script src="~/scripts/powerbi.js"></script>
+<script src="~/scripts/html2canvas.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.3/jspdf.debug.js"></script>
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div id="errorWrapper">
@@ -20,56 +22,71 @@
 
     return;
 }
-<asp:HiddenField ID="accessToken" name="accessToken" runat="server" value="@Model.Id" />
+    @*<asp:HiddenField ID="accessToken" name="accessToken" runat="server" value="@Model.Id" />*@
+    <asp:HiddenField ID="accessToken" name="accessToken" runat="server" value="@Model.Token" />
 
-<div id="reportContainer"></div>
-<script>
-    // Read embed application token from Model
-    var accessToken = "@Model.Token";
-    // Read embed URL from Model
-    var embedUrl = "@Html.Raw(Model.EmbedUrl)";
-    // Read report Id from Model
-    var embedReportId = "@Model.Id";
+    <div id="reportContainer"></div>
+    <button id="bt2" onclick=printPDf()>Tulosta</button>
+    <script>
+        function printPDf() {
+            // Even though event.key is not 'Control' (e.g., 'a' is pressed),
+            // event.ctrlKey may be true if Ctrl key is pressed at the same time.
 
-    // Get models. models contains enums that can be used.
-    var models = window['powerbi-client'].models;
+            //html2canvas(document.querySelector("#reportContainer")).then(canvas => {
+            //    document.body.appendChild(canvas);
+            //alert('Printing');
+            var element = document.getElementById('reportContainer');
+            var report = powerbi.get(element);
+            report.fullscreen();
+            report.print();
+        };
 
-    // Embed configuration used to describe the what and how to embed.
-    // This object is used when calling powerbi.embed.
-    // This also includes settings and options such as filters.
-    // You can find more information at https://github.com/Microsoft/PowerBI-JavaScript/wiki/Embed-Configuration-Details.
-    // Old
-    //var config = {
-    //    type: 'report',
-    //    //tokenType: models.TokenType.Aad,
-    //    accessToken: accessToken,
-    //    embedUrl: embedUrl,
-    //    id: embedReportId,
-    //    permissions: models.Permissions.All,
-    //    settings: {
-    //        filterPaneEnabled: false,
-    //        navContentPaneEnabled: true
-    //    }
-    //};
+        // Read embed application token from Model
+        var accessToken = "@Model.Token";
+        // Read embed URL from Model
+        var embedUrl = "@Html.Raw(Model.EmbedUrl)";
+        // Read report Id from Model
+        var embedReportId = "@Model.Id";
 
-    var config = {
-        type: 'report',
-        accessToken: accessToken,
-        embedUrl: embedUrl,
-        id: embedReportId,
-        settings: {
-            filterPaneEnabled: false,
-            navContentPaneEnabled: true
-        }
-    };
+        // Get models. models contains enums that can be used.
+        var models = window['powerbi-client'].models;
 
-    ////// Get a reference to the embedded report HTML element
-    //var reportContainer = $('#reportContainer')[0];
-    //var report = powerbi.embed(reportContainer, config);
-    // Grab the reference to the div HTML element that will host the report.
-    var reportContainer = document.getElementById('reportContainer');
+        // Embed configuration used to describe the what and how to embed.
+        // This object is used when calling powerbi.embed.
+        // This also includes settings and options such as filters.
+        // You can find more information at https://github.com/Microsoft/PowerBI-JavaScript/wiki/Embed-Configuration-Details.
+        // Old
+        //var config = {
+        //    type: 'report',
+        //    //tokenType: models.TokenType.Aad,
+        //    accessToken: accessToken,
+        //    embedUrl: embedUrl,
+        //    id: embedReportId,
+        //    permissions: models.Permissions.All,
+        //    settings: {
+        //        filterPaneEnabled: false,
+        //        navContentPaneEnabled: true
+        //    }
+        //};
 
-    // Embed the report and display it within the div container.
-    var report = powerbi.embed(reportContainer, config);
+        var config = {
+            type: 'report',
+            accessToken: accessToken,
+            embedUrl: embedUrl,
+            id: embedReportId,
+            settings: {
+                filterPaneEnabled: false,
+                navContentPaneEnabled: true
+            }
+        };
 
-</script>
+        ////// Get a reference to the embedded report HTML element
+        //var reportContainer = $('#reportContainer')[0];
+        //var report = powerbi.embed(reportContainer, config);
+        // Grab the reference to the div HTML element that will host the report.
+        var reportContainer = document.getElementById('reportContainer');
+
+        // Embed the report and display it within the div container.
+        var report = powerbi.embed(reportContainer, config);
+
+    </script>

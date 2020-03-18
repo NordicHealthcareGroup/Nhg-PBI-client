@@ -32,6 +32,9 @@ namespace Nhg.Controllers
 
         private string GroupId = ConfigurationManager.AppSettings["groupId"];
         private string ReportId = ConfigurationManager.AppSettings["reportId"];
+        private string UserId = null;
+        private string UserName = null;
+
 
         public class PBIReports
         {
@@ -78,33 +81,54 @@ namespace Nhg.Controllers
             ClientCredential cc = new ClientCredential(clientID, clientSecret);
 
             AuthenticationResult result = await AC.AcquireTokenByAuthorizationCodeAsync(authorizationCode, new Uri(redirectUri), cc);
+            this.UserId = result.UserInfo.UniqueId;
+            this.UserName = result.UserInfo.DisplayableId;
             return result.AccessToken;
         }
 
         public async Task<ActionResult> Run(string reportid, string groupid, string username, string roles)
         {
             if (Request.Cookies["token"] != null)
-                {
+            {
                 // If we have a token go ahead and use it
                 ViewData["token"] = Request.Cookies["token"].Value;
                 string state = Request.QueryString["state"];
-                ReportId = state.Split('/')[0];
-                GroupId = state.Split('/')[1];
+                if (state != null)
+                {
+                    this.ReportId = state.Split('/')[0];
+                    this.GroupId = state.Split('/')[1];
+                }
+                else
+                {
+                    this.ReportId = reportid;
+                    this.GroupId = groupid;
+                }
 
             }
             else if (Request.QueryString.AllKeys.Contains("code"))
             {
                 // If we have a code, we need to exchange that for a token
                 string strToken = await GetAccessToken(Request.QueryString["code"], ClientId, ClientSecret, RedirectUrl);
+                //string strToken = strResult.Split('/')[0];
+                //string userId = strResult.Split('/')[1];
+
                 HttpCookie tokenCookie = new HttpCookie("token");
                 tokenCookie.Value = strToken;
-                tokenCookie.Expires = DateTime.Now.AddSeconds(10);
+                tokenCookie.Expires = DateTime.Now.AddSeconds(3600);
                 Response.Cookies.Add(tokenCookie);
 
                 ViewData["token"] = strToken;
                 string state = Request.QueryString["state"];
-                ReportId = state.Split('/')[0];
-                GroupId = state.Split('/')[1];
+                if (state != null)
+                {
+                    ReportId = state.Split('/')[0];
+                    GroupId = state.Split('/')[1];
+                }
+                else
+                {
+                    this.ReportId = reportid;
+                    this.GroupId = groupid;
+                }
             }
             else
             {
@@ -113,7 +137,10 @@ namespace Nhg.Controllers
                 GroupId = groupid;
                 GetAuthorizationCode();
             }
-
+            /// Check if user has rights to ythe report
+            /// 
+            var testid = this.UserId;
+            var testname = this.UserName;
             var report = GetReport(ReportId, GroupId);
             var result = new ReportModel();
             if (report == null)
