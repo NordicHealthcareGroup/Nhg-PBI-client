@@ -114,7 +114,7 @@ namespace Nhg.Controllers
 
                 HttpCookie tokenCookie = new HttpCookie("token");
                 tokenCookie.Value = strToken;
-                tokenCookie.Expires = DateTime.Now.AddSeconds(3600);
+                tokenCookie.Expires = DateTime.Now.AddSeconds(600);
                 Response.Cookies.Add(tokenCookie);
 
                 ViewData["token"] = strToken;

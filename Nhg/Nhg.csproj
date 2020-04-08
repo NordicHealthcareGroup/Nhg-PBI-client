@@ -293,6 +293,7 @@
     <None Include="Properties\PublishProfiles\nhgbi - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\nhgbi-in - Web Deploy.pubxml" />
     <Content Include="Site.Mobile.Master" />
+    <None Include="Properties\PublishProfiles\nhgpbi1 - Web Deploy.pubxml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

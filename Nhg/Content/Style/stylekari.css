@@ -29,8 +29,8 @@ body {
   position: absolute;
   width: 80px;
   height: 30px;
-  left: 20px;
-  top: 20px;
+  left: 15px;
+  top: 15px;
   opacity: 0.8;
   background-color: white; 
   color: black; 
@@ -40,14 +40,14 @@ body {
 #bt2 {
   position: absolute;
   border: none;
-  width: 100px;
+  width: 80px;
   height: 30px;
   left: 20px;
   top: 20px;
   opacity: 0.3;
   background-color: white; 
   color: black; 
-  font-size: 16px;
+  font-size: 14px;
   margin: 4px 2px;
   transition-duration: 0.4s;
   cursor: pointer;
@@ -61,32 +61,6 @@ body {
   background-color: #008CBA;
   color: white;
 }
-
-#btPrt {
-  border: none;
-  position: absolute;
-  /*width: 100px;
-  height: 30px;*/
-  left: 20px;
-  top: 20px;
-  text-align: center;
-  text-decoration: none;
-  /*display: inline-block;*/
-  font-size: 16px;
-  margin: 4px 2px;
-  transition-duration: 0.4s;
-  cursor: pointer;
-  opacity: 0.3;
-  background-color: white; 
-  color: black; 
-  border: 2px solid #008CBA;
-}
-
-#btPrt:hover {
-  background-color: #008CBA;
-  color: white;
-}
-
 
 
 #reportContainer > button {
