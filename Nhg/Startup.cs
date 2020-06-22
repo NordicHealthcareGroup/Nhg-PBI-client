@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System.Collections.Specialized;
 using System.Web;
 using System;
+using System.Net;
 
 [assembly: OwinStartupAttribute(typeof(Nhg.Startup))]
 namespace Nhg
@@ -53,11 +54,9 @@ namespace Nhg
         } // end - ConfigureAuth method  
 
 
-
-
         public void Configuration(IAppBuilder app)
         {
-            //ConfigureAuth(app);
+            System.Net.ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
         }
     }
 }
