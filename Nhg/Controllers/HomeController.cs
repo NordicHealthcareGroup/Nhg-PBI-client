@@ -114,7 +114,8 @@ namespace Nhg.Controllers
 
                 HttpCookie tokenCookie = new HttpCookie("token");
                 tokenCookie.Value = strToken;
-                tokenCookie.Expires = DateTime.Now.AddSeconds(600);
+                //tokenCookie.Expires = DateTime.Now.AddSeconds(600);
+                tokenCookie.Expires = DateTime.Now.AddSeconds(60);
                 Response.Cookies.Add(tokenCookie);
 
                 ViewData["token"] = strToken;
@@ -137,10 +138,24 @@ namespace Nhg.Controllers
                 GroupId = groupid;
                 GetAuthorizationCode();
             }
-            /// Check if user has rights to ythe report
+            /// Check if user has rights to the report
             /// 
             var testid = this.UserId;
             var testname = this.UserName;
+            if (this.UserId != null)
+            {
+                UserloginDataContext dc = new UserloginDataContext("Database=nhgconfig;Server=tcp:nhgsqlazure.database.windows.net;User ID=Kapteeni;Password=Saimaan norppa#4711");
+                var login = new Login();
+                login.Id = Guid.NewGuid();
+                login.LoginTime = DateTime.Now;
+                login.UserId = new Guid(this.UserId);
+                login.Username = this.UserName;
+                login.ReportId = new Guid(this.ReportId);
+                login.ReportName = this.ReportId;
+                dc.Logins.InsertOnSubmit(login);
+                dc.SubmitChanges();
+            }
+            //
             var report = GetReport(ReportId, GroupId);
             var result = new ReportModel();
             if (report == null)
@@ -158,6 +173,10 @@ namespace Nhg.Controllers
                     result.EmbedUrl = report.EmbedUrl;
                     result.Id = report.Id;
                     result.GroupId = groupid;
+                    if (result.GroupId== "28C694C2-1FE0-45BD-80CF-5EA6C4B54E18")
+                        result.TulostaBtn = "Print";
+                    else
+                        result.TulostaBtn = "Tulosta";
                 }
             }
             return View(result);

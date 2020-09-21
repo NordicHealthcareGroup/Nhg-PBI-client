@@ -7,8 +7,9 @@
 
 <script src="https://npmcdn.com/es6-promise@3.2.1"></script>
 <script src="~/scripts/powerbi.js"></script>
-<script src="~/scripts/html2canvas.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.3/jspdf.debug.js"></script>
+@*<script src="~/scripts/html2canvas.js"></script>*@
+@*<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.3/jspdf.debug.js"></script>*@
+
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div id="errorWrapper">
@@ -26,7 +27,7 @@
     <asp:HiddenField ID="accessToken" name="accessToken" runat="server" value="@Model.Token" />
 
     <div id="reportContainer"></div>
-    <button id="bt2" onclick=printPDf()>Tulosta</button>
+    <button id="bt2" onclick=printPDf()>@Model.TulostaBtn</button>
     <script>
         function printPDf() {
             // Even though event.key is not 'Control' (e.g., 'a' is pressed),

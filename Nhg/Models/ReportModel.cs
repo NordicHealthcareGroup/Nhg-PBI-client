@@ -22,5 +22,7 @@ namespace Nhg.Models
 
 
         public string ErrorMessage { get; internal set; }
+
+        public string TulostaBtn { get; internal set; }
     }
 }
