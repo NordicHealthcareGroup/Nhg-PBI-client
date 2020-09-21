@@ -173,7 +173,7 @@ namespace Nhg.Controllers
                     result.EmbedUrl = report.EmbedUrl;
                     result.Id = report.Id;
                     result.GroupId = groupid;
-                    if (result.GroupId== "28C694C2-1FE0-45BD-80CF-5EA6C4B54E18")
+                    if (GroupId.ToUpper() == "8EB5C680-1E40-45A9-9731-81CDC21ADFD7")
                         result.TulostaBtn = "Print";
                     else
                         result.TulostaBtn = "Tulosta";
