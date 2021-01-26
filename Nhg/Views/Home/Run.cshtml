@@ -29,7 +29,11 @@
     <asp:HiddenField ID="accessToken" name="accessToken" runat="server" value="@Model.Token" />
 
     <div id="reportContainer"></div>
-    <button id="bt2" onclick=printPDf()>@Model.TulostaBtn</button>
+    @if (@Model.GroupId != null && @Model.GroupId.ToUpper() != "8EB5C680-1E40-45A9-9731-81CDC21ADFD7")
+    {
+        <button id="bt2" onclick=printPDf()>@Model.TulostaBtn</button>
+    }
+
     <script>
         function printPDf() {
             // Even though event.key is not 'Control' (e.g., 'a' is pressed),

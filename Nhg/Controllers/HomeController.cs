@@ -20,8 +20,6 @@ namespace Nhg.Controllers
 {
     public class HomeController : Controller
     {
-        private static readonly string Username = ConfigurationManager.AppSettings["pbiUsername"];
-        private static readonly string Password = ConfigurationManager.AppSettings["pbiPassword"];
         private static readonly string AuthorityUrl = ConfigurationManager.AppSettings["authorityUrl"];
         private static readonly string ResourceUrl = ConfigurationManager.AppSettings["resourceUrl"];
         private static readonly string ClientId = ConfigurationManager.AppSettings["clientId"];
@@ -172,9 +170,11 @@ namespace Nhg.Controllers
                     //result.EmbedUrl = report.webUrl;
                     result.EmbedUrl = report.EmbedUrl;
                     result.Id = report.Id;
-                    result.GroupId = groupid;
+                    result.GroupId = GroupId;
                     if (GroupId.ToUpper() == "8EB5C680-1E40-45A9-9731-81CDC21ADFD7")
+                    { 
                         result.TulostaBtn = "Print";
+                    }
                     else
                         result.TulostaBtn = "Tulosta";
                 }
@@ -214,17 +214,7 @@ namespace Nhg.Controllers
                 return "GroupId must be a Guid object. Please select a group you own and fill its Id in web.config";
             }
 
-            // Username must have a value.
-            if (string.IsNullOrEmpty(Username))
-            {
-                return "Username is empty. Please fill Power BI username in web.config";
-            }
 
-            // Password must have a value.
-            if (string.IsNullOrEmpty(Password))
-            {
-                return "Password is empty. Please fill password of Power BI username in web.config";
-            }
             return null;
         }
 
